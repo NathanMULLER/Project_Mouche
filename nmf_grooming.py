@@ -1,12 +1,19 @@
 from flygym.mujoco import NeuroMechFly
 from flygym.mujoco.state import KinematicPose
-from flygym.mujoco.arena.tethered import Tethered
+from flygym.mujoco.arena.tethered import Tethered, BaseArena
 
 import matplotlib.pyplot as plt
 
 import pickle
 from pathlib import Path
 import numpy as np
+
+class GroomingArena(BaseArena):
+    def __init__(self):
+        pass
+    def get_spawn_position(self):
+        pass
+arena = GroomingArena()
 
 # List of all the joints that are actuated during grooming
 all_groom_dofs = (
@@ -60,7 +67,7 @@ class NeuromechflyGrooming(NeuroMechFly):
         self,
         sim_params=None,
         actuated_joints=all_groom_dofs,
-        arena=None,
+        arena=arena,
         xml_variant="deepfly3d_old",
         groom_collision=False,
         touch_sensor_locations=[],
@@ -71,17 +78,18 @@ class NeuromechflyGrooming(NeuroMechFly):
             collisions = groom_self_collision
 
         if arena is None:
-            arena = Tethered()
+            #arena = Tethered()
+            arena = BaseArena()
         super().__init__(
             sim_params=sim_params,
             actuated_joints=actuated_joints,
-            arena=arena,
+            #arena=arena,
             xml_variant=xml_variant,
             self_collisions=collisions,
             floor_collisions="none",
             init_pose=KinematicPose.from_yaml("./data/pose_groom.yaml"),
         )
-        self._zoom_camera()
+        #self._zoom_camera()
 
     def _set_joints_stiffness_and_damping(self):
         super()._set_joints_stiffness_and_damping()
