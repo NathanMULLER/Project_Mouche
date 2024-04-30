@@ -12,8 +12,9 @@ class GroomingArena(BaseArena):
     def __init__(self):
         pass
     def get_spawn_position(self):
-        pass
-arena = GroomingArena()
+        super().get_spawn_position()
+
+arena_base = GroomingArena()
 
 # List of all the joints that are actuated during grooming
 all_groom_dofs = (
@@ -67,7 +68,7 @@ class NeuromechflyGrooming(NeuroMechFly):
         self,
         sim_params=None,
         actuated_joints=all_groom_dofs,
-        arena=arena,
+        arena=None,
         xml_variant="deepfly3d_old",
         groom_collision=False,
         touch_sensor_locations=[],
@@ -78,12 +79,12 @@ class NeuromechflyGrooming(NeuroMechFly):
             collisions = groom_self_collision
 
         if arena is None:
-            #arena = Tethered()
-            arena = BaseArena()
+            arena = Tethered()
+            #arena = BaseArena()
         super().__init__(
             sim_params=sim_params,
             actuated_joints=actuated_joints,
-            #arena=arena,
+            arena=arena,
             xml_variant=xml_variant,
             self_collisions=collisions,
             floor_collisions="none",
@@ -294,6 +295,7 @@ appendage_bodies = {
     "antenna": ["Pedicel", "Funiculus", "Arista"],
     "foreleg": ["Tarsus1", "Tarsus2", "Tarsus3", "Tarsus4", "Tarsus5", "Tibia"],
     "eye": ["Eye"],
+    
 }
 
 
