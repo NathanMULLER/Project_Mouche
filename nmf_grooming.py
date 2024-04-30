@@ -46,12 +46,12 @@ groom_self_collision = [
     f"{side}{app}"
     for side in "LR"
     for app in [
-        "FTibia",
-        "FTarsus1",
-        "FTarsus2",
-        "FTarsus3",
-        "FTarsus4",
-        "FTarsus5",
+        "HTibia",
+        "HTarsus1",
+        "HTarsus2",
+        "HTarsus3",
+        "HTarsus4",
+        "HTarsus5",
         "Arista",
         "Funiculus",
         "Pedicel",
@@ -308,7 +308,7 @@ def plot_state_and_contacts(
     dust_levels=None,
     dusted_appendages=None,
     n_cols=2,
-    plot_appendages=["Rantenna", "Lantenna", "Rforeleg", "Lforeleg", "Reye", "Leye"],
+    plot_appendages=["Rantenna", "Lantenna", "Rhindleg", "Lhindleg", "Reye", "Leye"],
 ):
     # plot touch sensor traces as well as behavior of the animal and the dust levels if provided
 
