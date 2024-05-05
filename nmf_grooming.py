@@ -20,7 +20,7 @@ arena_base = GroomingArena()
 all_groom_dofs = (
     [f"joint_{dof}" for dof in ["Head", "Head_yaw", "Head_roll"]]  # Head joints
     + [
-        f"joint_{side}F{dof}"
+        f"joint_{side}H{dof}"
         for side in "LR"
         for dof in [
             "Coxa",
@@ -38,7 +38,15 @@ all_groom_dofs = (
         for dof in ["Pedicel"]
         for angle in ["", "_yaw"]
     ]  # Antennae joints
+    + [
+        f"joint_{body_name}"
+        for body_name in ["A1A2", "A3", "A4", "A5", "A6"]
+    ]
+        
 )
+print(all_groom_dofs)
+print(len(all_groom_dofs))
+print(all_groom_dofs.index("joint_LHCoxa"), all_groom_dofs.index("joint_RHCoxa"))
 
 # List of alL the bodies that might be colliding during groomming
 
@@ -97,13 +105,28 @@ class NeuromechflyGrooming(NeuroMechFly):
         # set the stiffness and damping of antennal joints
         for joint in self.model.find_all("joint"):
             if any([app in joint.name for app in ["Pedicel", "Arista", "Funiculus"]]):
-                joint.stiffness = 1e-3
+                joint.stiffness = 0.1
                 joint.damping = 1e-3
 
+        for body_name in ["A1A2", "A3", "A4", "A5", "A6"]:
+            body = self.model.find("body", body_name)
+            # add pitch degree of freedom to bed the abdomen
+            body.add(
+                "joint",
+                name=f"joint_{body_name}",
+                type="hinge",
+                pos="0 0 0",
+                axis="0 1 0",
+                stiffness=5.0,
+                springref=0.0,
+                damping=5.0,
+                dclass="nmf",
+            )
         return None
 
-    def _set_actuators_gain(self):
-        for actuator in self._actuators:
+    def _add_joint_actuators(self, gain):
+        actuators = super()._add_joint_actuators(gain)
+        for actuator in actuators:
             if "Arista" in actuator.name:
                 kp = 1e-6
             elif "Pedicel" in actuator.name or "Funiculus" in actuator.name:
@@ -111,7 +134,7 @@ class NeuromechflyGrooming(NeuroMechFly):
             else:
                 kp = 20.0
             actuator.kp = kp
-        return None
+        return actuators
 
     def _zoom_camera(self):
         if self.sim_params.render_camera == "Animat/camera_front":
