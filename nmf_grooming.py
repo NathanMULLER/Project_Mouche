@@ -44,7 +44,8 @@ all_groom_dofs = (
     ]
         
 )
-print(all_groom_dofs)
+for index, element in enumerate(all_groom_dofs):
+    print(index, element, end='\n')
 print(len(all_groom_dofs))
 print(all_groom_dofs.index("joint_LHCoxa"), all_groom_dofs.index("joint_RHCoxa"))
 
