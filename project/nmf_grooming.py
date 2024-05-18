@@ -1,6 +1,6 @@
 from flygym.mujoco import NeuroMechFly
 from flygym.mujoco.state import KinematicPose
-from flygym.mujoco.arena.tethered import Tethered
+from flygym.mujoco.arena.tethered import Tethered, BaseArena
 
 import matplotlib.pyplot as plt
 
@@ -8,11 +8,19 @@ import pickle
 from pathlib import Path
 import numpy as np
 
+class GroomingArena(BaseArena):
+    def __init__(self):
+        pass
+    def get_spawn_position(self):
+        super().get_spawn_position()
+
+arena_base = GroomingArena()
+
 # List of all the joints that are actuated during grooming
 all_groom_dofs = (
     [f"joint_{dof}" for dof in ["Head", "Head_yaw", "Head_roll"]]  # Head joints
     + [
-        f"joint_{side}F{dof}"
+        f"joint_{side}H{dof}"
         for side in "LR"
         for dof in [
             "Coxa",
@@ -30,7 +38,16 @@ all_groom_dofs = (
         for dof in ["Pedicel"]
         for angle in ["", "_yaw"]
     ]  # Antennae joints
+    + [
+        f"joint_{body_name}"
+        for body_name in ["A1A2", "A3", "A4", "A5", "A6"]
+    ]
+        
 )
+for index, element in enumerate(all_groom_dofs):
+    print(index, element, end='\n')
+print(len(all_groom_dofs))
+print(all_groom_dofs.index("joint_LHCoxa"), all_groom_dofs.index("joint_RHCoxa"))
 
 # List of alL the bodies that might be colliding during groomming
 
@@ -38,12 +55,12 @@ groom_self_collision = [
     f"{side}{app}"
     for side in "LR"
     for app in [
-        "FTibia",
-        "FTarsus1",
-        "FTarsus2",
-        "FTarsus3",
-        "FTarsus4",
-        "FTarsus5",
+        "HTibia",
+        "HTarsus1",
+        "HTarsus2",
+        "HTarsus3",
+        "HTarsus4",
+        "HTarsus5",
         "Arista",
         "Funiculus",
         "Pedicel",
@@ -72,6 +89,7 @@ class NeuromechflyGrooming(NeuroMechFly):
 
         if arena is None:
             arena = Tethered()
+            #arena = BaseArena()
         super().__init__(
             sim_params=sim_params,
             actuated_joints=actuated_joints,
@@ -81,20 +99,35 @@ class NeuromechflyGrooming(NeuroMechFly):
             floor_collisions="none",
             init_pose=KinematicPose.from_yaml("./data/pose_groom.yaml"),
         )
-        self._zoom_camera()
+        #self._zoom_camera()
 
     def _set_joints_stiffness_and_damping(self):
         super()._set_joints_stiffness_and_damping()
         # set the stiffness and damping of antennal joints
         for joint in self.model.find_all("joint"):
             if any([app in joint.name for app in ["Pedicel", "Arista", "Funiculus"]]):
-                joint.stiffness = 1e-3
+                joint.stiffness = 0.1
                 joint.damping = 1e-3
 
+        for body_name in ["A1A2", "A3", "A4", "A5", "A6"]:
+            body = self.model.find("body", body_name)
+            # add pitch degree of freedom to bed the abdomen
+            body.add(
+                "joint",
+                name=f"joint_{body_name}",
+                type="hinge",
+                pos="0 0 0",
+                axis="0 1 0",
+                stiffness=5.0,
+                springref=0.0,
+                damping=5.0,
+                dclass="nmf",
+            )
         return None
 
-    def _set_actuators_gain(self):
-        for actuator in self._actuators:
+    def _add_joint_actuators(self, gain):
+        actuators = super()._add_joint_actuators(gain)
+        for actuator in actuators:
             if "Arista" in actuator.name:
                 kp = 1e-6
             elif "Pedicel" in actuator.name or "Funiculus" in actuator.name:
@@ -102,7 +135,7 @@ class NeuromechflyGrooming(NeuroMechFly):
             else:
                 kp = 20.0
             actuator.kp = kp
-        return None
+        return actuators
 
     def _zoom_camera(self):
         if self.sim_params.render_camera == "Animat/camera_front":
@@ -286,6 +319,7 @@ appendage_bodies = {
     "antenna": ["Pedicel", "Funiculus", "Arista"],
     "foreleg": ["Tarsus1", "Tarsus2", "Tarsus3", "Tarsus4", "Tarsus5", "Tibia"],
     "eye": ["Eye"],
+    
 }
 
 
@@ -298,7 +332,7 @@ def plot_state_and_contacts(
     dust_levels=None,
     dusted_appendages=None,
     n_cols=2,
-    plot_appendages=["Rantenna", "Lantenna", "Rforeleg", "Lforeleg", "Reye", "Leye"],
+    plot_appendages=["Rantenna", "Lantenna", "Rhindleg", "Lhindleg", "Reye", "Leye"],
 ):
     # plot touch sensor traces as well as behavior of the animal and the dust levels if provided
 
