@@ -116,7 +116,7 @@ class NeuromechflyGrooming(NeuroMechFly):
             elif "Pedicel" in actuator.name or "Funiculus" in actuator.name:
                 kp = 0.2
             else:
-                kp = 20.0
+                kp = 50.0
             actuator.kp = kp
         return actuators
 
