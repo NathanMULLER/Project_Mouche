@@ -86,3 +86,4 @@ class NeuromechflyProject(NeuroMechFly):
             self._actuators.append(actuator)
 
         return super()._add_adhesion_actuators(gain)
+    

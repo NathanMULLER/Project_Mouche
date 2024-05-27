@@ -1,6 +1,5 @@
 from flygym.mujoco import NeuroMechFly
 from flygym.mujoco.state import KinematicPose
-from flygym.mujoco.arena.tethered import Tethered, BaseArena
 
 import matplotlib.pyplot as plt
 
@@ -8,20 +7,11 @@ import pickle
 from pathlib import Path
 import numpy as np
 
-class GroomingArena(BaseArena):
-    def __init__(self):
-        pass
-    def get_spawn_position(self):
-        super().get_spawn_position()
-
-arena_base = GroomingArena()
-
 # List of all the joints that are actuated during grooming
 all_groom_dofs = (
-    [f"joint_{dof}" for dof in ["Head", "Head_yaw", "Head_roll"]]  # Head joints
-    + [
-        f"joint_{side}H{dof}"
+    [f"joint_{side}{place}{dof}"
         for side in "LR"
+        for place in "FMH"
         for dof in [
             "Coxa",
             "Coxa_roll",
@@ -31,18 +21,20 @@ all_groom_dofs = (
             "Tibia",
             "Tarsus1",
         ]
-    ]  # Front leg joints
+    ] # legs joints
+    + [
+        f"joint_{body_name}"
+        for body_name in ["A1A2", "A3", "A4", "A5", "A6"]
+    ]  # legs joints
+    + [
+        f"joint_{dof}" for dof in ["Head", "Head_yaw", "Head_roll"]
+    ] # Head joints
     + [
         f"joint_{side}{dof}{angle}"
         for side in "LR"
         for dof in ["Pedicel"]
         for angle in ["", "_yaw"]
     ]  # Antennae joints
-    + [
-        f"joint_{body_name}"
-        for body_name in ["A1A2", "A3", "A4", "A5", "A6"]
-    ]
-        
 )
 # for index, element in enumerate(all_groom_dofs):
 #     print(index, element, end='\n')
@@ -69,7 +61,7 @@ groom_self_collision = [
 ]
 
 
-class NeuromechflyProject(NeuroMechFly):
+class NeuromechflyGrooming(NeuroMechFly):
     # Bas class for grooming set the initial pose, potential collisions and actuated joints
     # Makes it possible to add touch sensors to monitor the contacts of the antennas with the legs
 
@@ -77,28 +69,18 @@ class NeuromechflyProject(NeuroMechFly):
         self,
         sim_params=None,
         actuated_joints=all_groom_dofs,
-        arena=None,
-        xml_variant="deepfly3d_old",
         groom_collision=False,
         touch_sensor_locations=[],
-    ):  
-        
+    ):
         self.touch_sensor_locations = touch_sensor_locations
         collisions = []
         if groom_collision:
             collisions = groom_self_collision
 
-        if arena is None:
-            arena = Tethered()
-            #arena = BaseArena()
         super().__init__(
             sim_params=sim_params,
             actuated_joints=actuated_joints,
-            arena=arena,
-            xml_variant=xml_variant,
             self_collisions=collisions,
-            floor_collisions="none",
-            init_pose=KinematicPose.from_yaml("./data/pose_groom.yaml"),
         )
         #self._zoom_camera()
 
@@ -333,7 +315,7 @@ def plot_state_and_contacts(
     dust_levels=None,
     dusted_appendages=None,
     n_cols=2,
-    plot_appendages=["Rantenna", "Lantenna", "Rhindleg", "Lhindleg", "Reye", "Leye"],
+    plot_appendages=["Rantenna", "Lantenna", "Rforeleg", "Lforeleg", "Reye", "Leye"],
 ):
     # plot touch sensor traces as well as behavior of the animal and the dust levels if provided
 
