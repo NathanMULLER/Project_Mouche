@@ -95,7 +95,6 @@ class NeuromechflyGrooming(NeuroMechFly):
             floor_collisions="none",
             init_pose=KinematicPose.from_yaml("./data/pose_groom.yaml"),
         )
-        #self._zoom_camera()
 
     def _set_joints_stiffness_and_damping(self):
         super()._set_joints_stiffness_and_damping()
@@ -293,9 +292,7 @@ def load_grooming_data(data_path, timestep):
     for i, joint in enumerate(all_groom_dofs):
         if "Pedicel" in joint:
             pass
-            # data[joint] = np.ones_like(data[joint])*np.mean(data[joint])
         if "RPedicel_yaw" in joint:
-            # data[joint] = np.ones_like(data[joint])*np.mean(data[joint])*-1
             data[joint] *= -1
         data_block[i, :] = np.unwrap(np.interp(output_t, input_t, data[joint]))
 
